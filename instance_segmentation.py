@@ -79,7 +79,7 @@ def get_model_instance_segmentation_SSD_LITE(num_classes):
     model = torchvision.models.detection.ssdlite320_mobilenet_v3_large(pretrained=True)
     
     #get number of input features for the classifier
-    in_features = det_utils.retrieve_out_channels(model.backbone, (300, 300))
+    in_features = det_utils.retrieve_out_channels(model.backbone, (320, 320))
     anchors = model.anchor_generator.num_anchors_per_location()
     norm_layer = partial(nn.BatchNorm2d, eps= 0.001, momentum=0.03)
     model.head.classification_head = SSDLiteClassificationHead(in_features, anchors, num_classes, norm_layer)
@@ -97,7 +97,7 @@ def get_model_instance_segmentation_transfer_lite(num_classes):
     for p in model.parameters():
         p.requires_grad = False
 
-    in_features = det_utils.retrieve_out_channels(model.backbone, (300, 300))
+    in_features = det_utils.retrieve_out_channels(model.backbone, (320, 320))
 
     #replace the pre-trained head with a new one
     anchors = model.anchor_generator.num_anchors_per_location()
@@ -113,7 +113,7 @@ def get_model_instance_segmentation_fromS_lite(num_classes):
     model = torchvision.models.detection.ssd300_vgg16(pretrained=False)
     #get number of input features for the classifier
 
-    in_features = det_utils.retrieve_out_channels(model.backbone, (300, 300))
+    in_features = det_utils.retrieve_out_channels(model.backbone, (320, 320))
 
     #replace the pre-trained head with a new one
     anchors = model.anchor_generator.num_anchors_per_location()
