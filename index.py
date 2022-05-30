@@ -1,7 +1,7 @@
 from fileinput import filename
 import torch
 from preferences.detect.engine import train_one_epoch, evaluate
-from create_dataset import PennFudanDataset, PascalVOCDataset, PennFudanDataset2
+from create_dataset import VOCDataset, PascalVOCDataset, PennFudanDataset2
 from transformation import get_transform
 
 import json
@@ -44,8 +44,8 @@ def main():
     num_classes = 20
 
     # use our dataset and defined transformations
-    dataset = PennFudanDataset('/home/fp/Escritorio/transfer-learning-ssd/JSONfiles', 'TRAIN', get_transform(True))
-    dataset_test = PennFudanDataset('/home/fp/Escritorio/transfer-learning-ssd/JSONfiles', 'TEST',get_transform(False))
+    dataset = VOCDataset('/home/fp/Escritorio/transfer-learning-ssd/JSONfiles', 'TRAIN', get_transform(True))
+    dataset_test = VOCDataset('/home/fp/Escritorio/transfer-learning-ssd/JSONfiles', 'TEST',get_transform(False))
 
     #dataset = PennFudanDataset2('./../PennFudanPed', get_transform(True))
     #dataset_test = PennFudanDataset2('./../PennFudanPed', get_transform(False))

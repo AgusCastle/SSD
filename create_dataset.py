@@ -97,7 +97,7 @@ class PascalVOCDataset(Dataset):
         return images, boxes, labels, difficulties  # tensor (N, 3, 300, 300), 3 lists of N tensors each
 
 
-class PennFudanDataset(torch.utils.data.Dataset):
+class VOCDataset(torch.utils.data.Dataset):
     def __init__(self, root, split, transforms):
         self.root = root
         self.transforms = transforms
