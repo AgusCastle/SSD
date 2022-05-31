@@ -11,7 +11,7 @@ from preferences.detect.utils import collate_fn
 from instance_segmentation import get_model_instance_segmentation
 
 def save_model(epoch, model, optim):
-    filename = './bin/modelo.pth.rar'
+    filename = '/home/fp/Escritorio/repos/SSD/bin/modelo_ssd_finetuning.pth.rar'
     state = {
         'epoch': epoch,
         'model': model,
@@ -81,18 +81,18 @@ def main():
 
     tiempo_entrenamiento = time.time()
     for epoch in range(num_epochs):
-        # train for one epoch, printing every 10 iterations
+        # train for one epoch, printing every 200 iterations
         train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=200)
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
         #evaluate(model, data_loader_test, device=device)
+        save_model(epoch, model, optimizer)
 
     tiempo_entrenamiento = time.time() - tiempo_entrenamiento
     print("That's it!")
  
     print("Tiempo_entrenamiento: ", tiempo_entrenamiento)
 
-    save_model(epoch, model, optimizer)
 
-#main()
+main()
