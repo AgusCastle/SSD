@@ -19,14 +19,16 @@ from torchvision.transforms.functional import convert_image_dtype
 
 image_prob = read_image("/home/fp/FPM/DataBase/VOCtrainval_06-Nov-2007/VOCdevkit/VOC2007/JPEGImages/001325.jpg")
 
-chk = torch.load('/home/fp/Escritorio/transfer-learning-ssd/bin/modelo.pth.rar')
+chk = torch.load('/home/fp/Escritorio/repos/SSD/bin/modelo.pth.rar')
 
 star = chk['epoch'] + 1
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 device = torch.device('cpu')
+
 model = chk['model']
+model.eval()
 model.to(device)
 
 batch = torch.stack([image_prob.to(device)])
