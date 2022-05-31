@@ -22,7 +22,7 @@ def save_model(epoch, model, optim):
 
 from PIL import Image
 import numpy as np
-array = ["loss_value"]
+array = ["loss_value", "NMS"]
 
 filename = './results/losses.json'
 # 1. Read file contents
@@ -41,7 +41,7 @@ def main():
     # train on the GPU or on the CPU, if a GPU is not available
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     # our dataset has two classes only - background and person
-    num_classes = 20
+    num_classes = 21
 
     # use our dataset and defined transformations
     dataset = VOCDataset('/home/fp/Escritorio/transfer-learning-ssd/JSONfiles', 'TRAIN', get_transform(True))
@@ -77,7 +77,7 @@ def main():
                                                    gamma=0.1)
 
     # let's train it for 10 epochs
-    num_epochs = 10
+    num_epochs = 232
 
     tiempo_entrenamiento = time.time()
     for epoch in range(num_epochs):
@@ -95,4 +95,4 @@ def main():
 
     save_model(epoch, model, optimizer)
 
-main()
+#main()

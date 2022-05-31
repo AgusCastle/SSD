@@ -12,7 +12,7 @@ import preferences.detect.utils as utils
 
 
 def get_times(val, array):
-    filename = './results/losses.json'
+    filename = '/home/fp/Escritorio/repos/SSD/results/losses.json'
     entry1 = str(val)
     # 1. Read file contents
     with open(filename, "r") as file:
