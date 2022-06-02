@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 import json
 import os
 from PIL import Image
-from utils import transform
+from evaluate.utils_map import transform
 
 
 class PascalVOCDataset(Dataset):
@@ -17,7 +17,7 @@ class PascalVOCDataset(Dataset):
     A PyTorch Dataset class to be used in a PyTorch DataLoader to create batches.
     """
 
-    def __init__(self, data_folder, split, transf,keep_difficult=False,):
+    def __init__(self, data_folder, split, keep_difficult=False):
         """
         :param data_folder: folder where data files are stored
         :param split: split, one of 'TRAIN' or 'TEST'
@@ -37,7 +37,6 @@ class PascalVOCDataset(Dataset):
             self.objects = json.load(j)
 
         assert len(self.images) == len(self.objects)
-        self.transf = transf
 
     def __getitem__(self, i):
         # Read image
@@ -55,16 +54,11 @@ class PascalVOCDataset(Dataset):
             boxes = boxes[1 - difficulties]
             labels = labels[1 - difficulties]
             difficulties = difficulties[1 - difficulties]
-        
-        target = {} 
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["difficulties"] = difficulties
 
         # Apply transformations
-        image, target = self.transf(image, target)
+        image, boxes, labels, difficulties = transform(image, boxes, labels, difficulties, split=self.split)
 
-        return image, target
+        return image, boxes, labels, difficulties
 
     def __len__(self):
         return len(self.images)
