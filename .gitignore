@@ -1,4 +1,6 @@
 *.json
 __pycache__
 /bin
+/bin2
+/checkpoints
 /JSONfiles

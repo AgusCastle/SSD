@@ -9,9 +9,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #device = torch.device('cpu')
 
 # Label map
-voc_labels = ('aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
-              'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor')
-label_map = {k: v + 1 for v, k in enumerate(voc_labels)}
+G_labels = ('cloth', 'none', 'repirator', 'surgical', 'valve')
+#voc_labels = ('aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
+#              'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor')
+label_map = {k: v + 1 for v, k in enumerate(G_labels)}
 label_map['background'] = 0
 rev_label_map = {v: k for k, v in label_map.items()}  # Inverse mapping
 
@@ -21,7 +22,106 @@ distinct_colors = ['#e6194b', '#3cb44b', '#ffe119', '#0082c8', '#f58231', '#911e
                    '#ffd8b1', '#e6beff', '#808080', '#FFFFFF']
 label_color_map = {k: distinct_colors[i] for i, k in enumerate(label_map.keys())}
 
+# ---- DataSet-G ----
 
+def parse_annotation_G(annotation_path):
+    tree = ET.parse(annotation_path)
+    root = tree.getroot()
+
+    boxes = list()
+    labels = list()
+    for object in root.iter('object'):
+
+        label = object.find('name').text.lower().strip()
+        if label not in label_map:
+            continue
+
+        bbox = object.find('bndbox')
+        xmin = int(bbox.find('xmin').text) - 1
+        ymin = int(bbox.find('ymin').text) - 1
+        xmax = int(bbox.find('xmax').text) - 1
+        ymax = int(bbox.find('ymax').text) - 1
+
+        boxes.append([xmin, ymin, xmax, ymax])
+        labels.append(label_map[label])
+
+    return {'boxes': boxes, 'labels': labels}
+
+
+def create_data_lists_G(G_path, output_folder):
+    """
+    Create lists of images, the bounding boxes and labels of the objects in these images, and save these to file.
+
+    :param voc07_path: path to the 'VOC2007' folder
+    :param voc12_path: path to the 'VOC2012' folder
+    :param output_folder: folder where the JSONs must be saved
+    """
+    G_path = os.path.abspath(G_path)
+
+    train_images = list()
+    train_objects = list()
+    n_objects = 0
+
+    # Training data
+    #for path in [G_path]:
+
+    # Find IDs of images in training data
+    with open(os.path.join(G_path, 'ImageSets/Main/trainval.txt')) as f:
+        ids = f.read().splitlines()
+
+    for id in ids:
+        # Parse annotation's XML file
+        objects = parse_annotation_G(os.path.join(G_path, 'Annotations', id + '.xml'))
+        if len(objects['boxes']) == 0:
+            continue
+        n_objects += len(objects)
+        train_objects.append(objects)
+        train_images.append(os.path.join(G_path, 'JPEGImages', id + '.jpg'))
+
+    assert len(train_objects) == len(train_images)
+
+    # Save to file
+    with open(os.path.join(output_folder, 'TRAIN_images_G.json'), 'w') as j:
+        json.dump(train_images, j)
+    with open(os.path.join(output_folder, 'TRAIN_objects_G.json'), 'w') as j:
+        json.dump(train_objects, j)
+    with open(os.path.join(output_folder, 'label_map_G.json'), 'w') as j:
+        json.dump(label_map, j)  # save label map too
+
+    print('\nThere are %d training images containing a total of %d objects. Files have been saved to %s.' % (
+        len(train_images), n_objects, os.path.abspath(output_folder)))
+
+    # Test data
+    test_images = list()
+    test_objects = list()
+    n_objects = 0
+
+    # Find IDs of images in the test data
+    with open(os.path.join(G_path, 'ImageSets/Main/test.txt')) as f:
+        ids = f.read().splitlines()
+
+    for id in ids:
+        # Parse annotation's XML file
+        objects = parse_annotation_G(os.path.join(G_path, 'Annotations', id + '.xml'))
+        if len(objects) == 0:
+            continue
+        test_objects.append(objects)
+        n_objects += len(objects)
+        test_images.append(os.path.join(G_path, 'JPEGImages', id + '.jpg'))
+
+    assert len(test_objects) == len(test_images)
+
+    # Save to file
+    with open(os.path.join(output_folder, 'TEST_images_G.json'), 'w') as j:
+        json.dump(test_images, j)
+    with open(os.path.join(output_folder, 'TEST_objects_G.json'), 'w') as j:
+        json.dump(test_objects, j)
+
+    print('\nThere are %d test images containing a total of %d objects. Files have been saved to %s.' % (
+        len(test_images), n_objects, os.path.abspath(output_folder)))
+
+
+# ---- PASCAL-VOC ----
 def parse_annotation(annotation_path):
     tree = ET.parse(annotation_path)
     root = tree.getroot()

@@ -8,6 +8,7 @@ import torchvision.transforms.functional as F
 from torchvision.utils import draw_bounding_boxes
 import torchvision
 from torchvision.ops import nms
+import cv2
 
 plt.rcParams["savefig.bbox"] = 'tight'
 
@@ -31,9 +32,9 @@ distinct_colors = ['#e6194b', '#3cb44b', '#ffe119', '#0082c8', '#f58231', '#911e
 
 label_color_map = {k: distinct_colors[i] for i, k in enumerate(label_map.keys())}
 
-filename = '/home/bringascastle/Documentos/repos/SSD/results/losses.json'
+filename = '/home/bringascastle/Documentos/repos/SSD/results/results_retina.json'
 
-lab = ['NMS', 'general', 'draw', 'red']
+lab = ['NMS', 'GENERAL', 'DRAW', 'RED']
 
 with open(filename, "r") as file:
     datos = json.load(file)
@@ -52,7 +53,7 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
 
 
 def get_times(val, array):
-    filename = '/home/bringascastle/Documentos/repos/SSD/results/losses.json'
+    filename = '/home/bringascastle/Documentos/repos/SSD/results/results_retina.json'
     entry1 = str(val)
     # 1. Read file contents
     with open(filename, "r") as file:
@@ -63,34 +64,38 @@ def get_times(val, array):
     with open(filename, "w") as file:
         json.dump(datos, file)
 
-chk = torch.load('/home/bringascastle/Documentos/repos/SSD/bin2/modelo_ssd_fromS.pth.rar')
+chk = torch.load('/home/bringascastle/Documentos/repos/SSD/checkpoints/retina_finetunning.pth.rar')
 
 star = chk['epoch'] + 1
 print('Ultima epoca de entrenamiento: {}'.format(star))
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-device = torch.device('cpu')
+device = torch.device('cuda:1') if torch.cuda.is_available() else torch.device('cpu')
+#device = torch.device('cpu')
 model = chk['model']
-model.eval()
-model.to(device)
 
+model.to(device)
+model.eval()
 
 
 list_r = list(range(0, 4952))
-random.shuffle(list_r)
-list_cut = list_r[0:100]
+#random.shuffle(list_r)
+list_cut = list_r[0:5]
 list_path = glob.glob('/home/bringascastle/Escritorio/datasets/VOC_datasets/test_2007/JPEGImages/*.jpg')
+
+list_path.sort()
 
 for i in list_cut:
     image_prob = read_image(list_path[i])
+    #cv2.imwrite('/home/bringascastle/Documentos/repos/SSD/img_result/' + str(i) + '.jpg', image_prob)
     batch = torch.stack([image_prob.to(device)])
     batch = convert_image_dtype(batch, dtype=torch.float)
     batch.to(device)
 
     times_general = time.time()
+
     times = time.time()
     output = model(batch)
-    get_times(time.time() - times, "red")
-    score_threshold = .5
+    get_times(time.time() - times, "RED")
+    score_threshold = .45
 
     bbox = output[0]['boxes']
     
@@ -101,7 +106,7 @@ for i in list_cut:
         if output[0]['scores'][i] > score_threshold:
             val = output[0]['labels'][i] - 1
 
-            lista.append(voc_labels[val])
+            lista.append(voc_labels[val] + " " + str(output[0]['scores'][i].tolist()))
             listb.append(distinct_colors[val])
 
             a.append(bbox[i].tolist())
@@ -112,11 +117,12 @@ for i in list_cut:
     # draw bounding box on the input image
     img = draw_bounding_boxes(image_prob, a , width=3 ,labels=lista,colors=listb)
 
-    get_times(time.time()- times, 'draw')
+    get_times(time.time()- times, 'DRAW')
 
     #
 
-    get_times(time.time() - times_general, 'general')
+    get_times(time.time() - times_general, 'GENERAL')
 
-    #img = torchvision.transforms.ToPILImage()(img)
-    #img.show()
+    img = torchvision.transforms.ToPILImage()(img)
+    #cv2.imwrite('/home/bringascastle/Documentos/repos/SSD/img_result/' + str(i) + 'f.jpg', img)
+    img.show()
